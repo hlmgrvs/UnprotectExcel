@@ -22,11 +22,14 @@ If (Test-Path $ExcelFileSaved){
 Add-Type -A System.IO.Compression.FileSystem
 [IO.Compression.ZipFile]::ExtractToDirectory($Excel, $ExcelTempDir)
 
-$Input = $ExcelTempDir + "\xl\worksheets\sheet1.xml"
-$Output = $ExcelTempDir + "\xl\worksheets\sheet1.xml"
+$InputDir = $ExcelTempDir + "\xl\worksheets\"
 
-# Load the existing document
-$Doc = [xml](Get-Content $Input)
+$sheetXMLs = Get-ChildItem $InputDir -filter *.xml
+
+foreach ($Input in $sheetXMLs) {
+	
+	# Load the existing document
+	$Doc = [xml](Get-Content $Input.FullName)
 
 # Remove all tag with this name
 $DeleteNames = "sheetProtection"
@@ -36,13 +39,18 @@ $DeleteNames = "sheetProtection"
 	[void]$_.ParentNode.RemoveChild($_)
 }
 
-# Save the modified document
-$Doc.Save($Output)
+	# Save the modified document
+	$Doc.Save($Input.FullName)
+}
 
+# $Input = $ExcelTempDir + "\xl\worksheets\sheet1.xml"
+# $Output = $ExcelTempDir + "\xl\worksheets\sheet1.xml"
 [System.IO.Compression.ZipFile]::CreateFromDirectory($ExcelTempDir, $ExcelFileSaved) ;
+
+Remove-Item $ExcelTempDir -Force -Recurse
 
 Write-Output "Success"
 
-[Environment]::Exit(200)
+# [Environment]::Exit(200)
 
 
